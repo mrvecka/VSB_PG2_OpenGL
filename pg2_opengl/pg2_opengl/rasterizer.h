@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "objloader.h"
 #include "linmath.h"
+#include "matrix4x4.h"
+#include "glutils.h"
 
 /*! \class Raytracer
 \brief General ray tracer class.

@@ -291,6 +291,14 @@ int Rasterizer::MainLoop()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // state using function
 
 		glBindVertexArray(vao);
+		Matrix4x4 model;
+		model.set(0, 0, 1);
+		model.set(1, 1, 1);
+		model.set(2, 2, 1);
+		model.set(3, 3, 1);
+
+		Matrix4x4 mvp = camera.projection()*camera.view()*model;
+		SetMatrix4x4(shader_program, mvp.data(), "MVP");
 
 		glDrawArrays(GL_TRIANGLES, 0, no_triangles*3);
 		//glDrawArrays( GL_POINTS, 0, 3 );

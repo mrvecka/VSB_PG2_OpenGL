@@ -18,7 +18,7 @@ Camera::Camera( const int width, const int height, const float fov_y,
 	Update();
 }
 
-Vector3 Camera::view_from() const
+Vector3 Camera::view_from()
 {
 	return view_from_;
 }
@@ -51,6 +51,14 @@ void Camera::Update()
 	Vector3 y_c = z_c.CrossProduct( x_c );
 	y_c.Normalize();
 	M_c_w_ = Matrix3x3( x_c, y_c, z_c );
+
+	m_view = Matrix4x4(x_c, y_c, z_c, view_from_);
+	m_projection = Matrix4x4();
+	m_projection.set(0, 0, 1.0f / width_ / 2.0f);
+	m_projection.set(1, 1, -1.0f * 1.0f / (height_ / 2.0f));
+	m_projection.set(2, 2, (50.0f + 1.0f) / (1.0f - 50.0f));
+	m_projection.set(2, 3, (2.0f * 50.0f * 1.0f) / (1.0f - 50.0f));
+	m_projection.set(3, 2, -1.0f);
 }
 
 void Camera::MoveForward( const float dt )
@@ -61,4 +69,15 @@ void Camera::MoveForward( const float dt )
 
 	view_from_ += ds;
 	view_at_ += ds;
+}
+
+
+Matrix4x4 Camera::projection() const
+{
+	return m_projection;;
+}
+
+Matrix4x4 Camera::view() const
+{
+	return m_view;
 }
