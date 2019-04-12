@@ -7,6 +7,7 @@
 #include "linmath.h"
 #include "matrix4x4.h"
 #include "glutils.h"
+#include "mymath.h"
 
 /*! \class Raytracer
 \brief General ray tracer class.
@@ -18,7 +19,7 @@
 class Rasterizer
 {
 public:
-	Rasterizer(const int width, const int height, const float fov_y, const Vector3 view_from, const Vector3 view_at);
+	Rasterizer(const int width, const int height, const float fov_y, const Vector3 view_from, const Vector3 view_at,float near_plane,float far_plane);
 	~Rasterizer();
 
 	int InitDeviceAndScene(const char* filename);

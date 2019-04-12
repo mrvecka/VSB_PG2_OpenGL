@@ -18,20 +18,27 @@ public:
 	Camera() { }
 
 	Camera( const int width, const int height, const float fov_y,
-		const Vector3 view_from, const Vector3 view_at );
+		const Vector3 view_from, const Vector3 view_at,float near_plane,float far_plane );
 
 	Vector3 view_from();
 	Matrix3x3 M_c_w() const;
 	float focal_length() const;
 
+	float near_plane;
+	float far_plane;
+
 	void set_fov_y( const float fov_y );
 
 	void Update();
 
+	float aspect_ratio;
+	float width_half;
+	float height_half;
+
 	void MoveForward( const float dt );
 
 	Matrix4x4 projection() const;
-	Matrix4x4 view() const;
+	Matrix4x4 view();
 
 private:
 	int width_{ 640 }; // image width (px)

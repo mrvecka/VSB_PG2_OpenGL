@@ -1,16 +1,13 @@
 #include "pch.h"
 #include "rasterizer.h"
 
-Vector3 cameraPos = Vector3(0.0f, 0.0f, 3.0f);
-Vector3 cameraFront = Vector3(0.0f, 0.0f, -1.0f);
-Vector3 cameraUp = Vector3(0.0f, 1.0f, 0.0f);
-
-Rasterizer::Rasterizer(const int width, const int height, const float fov_y, const Vector3 view_from, const Vector3 view_at)
+Rasterizer::Rasterizer(const int width, const int height, const float fov_y, const Vector3 view_from, const Vector3 view_at,float near_plane,float far_plane)
 {
-	camera = Camera(width, height, fov_y, view_from, view_at);
+	camera = Camera(width, height, fov_y, view_from, view_at,near_plane,far_plane);
 	fov = fov_y;
 	this->width = width;
 	this->height = height;
+
 }
 
 Rasterizer::~Rasterizer()
@@ -248,34 +245,37 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 	glBufferData(GL_ARRAY_BUFFER, (vertices.size() * sizeof(MyVertex)), vertices.data(), GL_STATIC_DRAW); // copies the previously defined vertex data into the buffer's memory
 
 	// vertex position
-	GLuint posAttrib = glGetAttribLocation(shader_program, "in_position");
-	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, vertex_stride, (void*)0);
-	glEnableVertexAttribArray(posAttrib);
+	//GLuint posAttrib = glGetAttribLocation(shader_program, "in_position");
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertex_stride, (void*)0);
+	glEnableVertexAttribArray(0);
 
 	// normal
-	GLuint normalAttrib = glGetAttribLocation(shader_program, "in_normal");
-	glVertexAttribPointer(normalAttrib, 3, GL_FLOAT, GL_FALSE, vertex_stride, (void*)(sizeof(float) * 3));
-	glEnableVertexAttribArray(normalAttrib);
+	//GLuint normalAttrib = glGetAttribLocation(shader_program, "in_normal");
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertex_stride, (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
 
 	// color
-	GLuint colorAttrib = glGetAttribLocation(shader_program, "in_color");
-	glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_TRUE, vertex_stride, (void*)(sizeof(float) * 6));
-	glEnableVertexAttribArray(colorAttrib);
+	//GLuint colorAttrib = glGetAttribLocation(shader_program, "in_color");
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, vertex_stride, (void*)(sizeof(float) * 6));
+	glEnableVertexAttribArray(2);
 
 	// vertex texture coordinates
-	GLuint texCoordAttrib = glGetAttribLocation(shader_program, "in_texcoord");
-	glVertexAttribPointer(texCoordAttrib, 2, GL_FLOAT, GL_FALSE, vertex_stride, (void*)(sizeof(float) * 9));
-	glEnableVertexAttribArray(texCoordAttrib);
+	//GLuint texCoordAttrib = glGetAttribLocation(shader_program, "in_texcoord");
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertex_stride, (void*)(sizeof(float) * 9));
+	glEnableVertexAttribArray(3);
 
 	//GLuint ebo = 0; // optional buffer of indices
 	//glGenBuffers( 1, &ebo );
 	//glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ebo );
 	//glBufferData( GL_ELEMENT_ARRAY_BUFFER, (indices.size() * sizeof(int)), indices.data(), GL_STATIC_DRAW );
 
-	glPointSize(10.0f);
-	glLineWidth(2.0f);
+	glPointSize(2.0f);
+	glLineWidth(1.0f);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+		
 	//main loop
 	//release device
 
@@ -285,6 +285,7 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 int Rasterizer::MainLoop()
 {
 	glUseProgram(shader_program);
+	float a = deg2rad(45);
 	while (!glfwWindowShouldClose(window))
 	{
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // state setting function
@@ -292,11 +293,11 @@ int Rasterizer::MainLoop()
 
 		glBindVertexArray(vao);
 		Matrix4x4 model;
-		model.set(0, 0, 1);
-		model.set(1, 1, 1);
-		model.set(2, 2, 1);
-		model.set(3, 3, 1);
-
+		model.set(0, 0, cosf(a));
+		model.set(0, 1, -sinf(a));
+		model.set(1, 0, sinf(a));
+		model.set(1, 1, cosf(a));
+		a += 1e-2f;
 		Matrix4x4 mvp = camera.projection()*camera.view()*model;
 		SetMatrix4x4(shader_program, mvp.data(), "MVP");
 
