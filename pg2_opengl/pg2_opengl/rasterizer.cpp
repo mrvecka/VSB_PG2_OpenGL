@@ -300,6 +300,8 @@ int Rasterizer::MainLoop()
 		a += 1e-2f;
 		Matrix4x4 mvp = camera.projection()*camera.view()*model;
 		SetMatrix4x4(shader_program, mvp.data(), "MVP");
+		Matrix4x4 mv = camera.view()*model;
+		SetMatrix4x4(shader_program, mvp.data(), "MV");
 
 		glDrawArrays(GL_TRIANGLES, 0, no_triangles*3);
 		//glDrawArrays( GL_POINTS, 0, 3 );

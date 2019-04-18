@@ -61,8 +61,8 @@ void Camera::Update()
 
 	m_view = Matrix4x4(x_c, y_c, z_c, view_from_);
 	m_projection = Matrix4x4();
-	m_projection.set(0, 0, near_plane /( width_half / 2.0f));
-	m_projection.set(1, 1, 1.0f * (near_plane / (height_half / 2.0f)));
+	m_projection.set(0, 0, near_plane /( width_half));
+	m_projection.set(1, 1, 1.0f * (near_plane / (height_half)));
 	m_projection.set(2, 2, (far_plane + near_plane) / (near_plane - far_plane));
 	m_projection.set(2, 3, (2.0f * far_plane * near_plane) / (near_plane - far_plane));
 	m_projection.set(3, 2, -1.0f);

@@ -5,6 +5,7 @@ layout (location = 2) in vec3 in_color;
 layout (location = 3) in vec2 in_texcoord;
 
 uniform mat4 MVP;
+uniform mat4 MV; 
 
 out vec3 ex_color;
 out vec3 ex_normal;
@@ -22,10 +23,11 @@ void main( void )
 		ex_color = (in_normal+vec3(1,1,1))*0.5f;;
 	}
 	ex_color = in_color;
-	vec3 unified_normal = in_normal;
-	if (dot(unified_normal,vec3(0,0,1))< 0)
+	vec3 unified_normal_es = normalize( ( MV * vec4( in_normal.xyz, 0.0f ) ).xyz );
+	vec4 hit_es = MV * vec4(in_position.xyz,1.0f); // in_position = (nx, ny, nz, 0)
+	vec3 omega_i_es = normalize( hit_es.xyz / hit_es.w );
+	if ( dot( unified_normal_es, omega_i_es ) > 0.0f )
 	{
-		unified_normal = in_normal*-1;
-	}
-	ex_normal = unified_normal;
+		unified_normal_es *= -1.0f;
+	}	ex_normal = unified_normal_es;
 }
