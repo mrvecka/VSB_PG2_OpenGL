@@ -121,6 +121,7 @@ public:
 	float metallicness; /*!< Koeficient kovovosti. */
 	float reflectivity; /*!< Koeficient odrazivosti. */
 	float ior; /*!< Index lomu. */
+	int material_index{0};
 
 	static const char kDiffuseMapSlot; /*!< Èíslo slotu difuzní textury. */
 	static const char kSpecularMapSlot; /*!< Èíslo slotu spekulární textury. */
@@ -142,5 +143,15 @@ private:
 
 	Shader shader_{ Shader::NORMAL }; /*!< Type of used shader. */
 };
+
+#pragma pack( push, 1 ) // 1 B alignment
+struct GLMaterial
+{
+	Color3f diffuse; // 3 * 4B
+	GLbyte pad0[4]; // + 4 B = 16 B
+	GLuint64 tex_diffuse_handle{ 0 }; // 1 * 8 B
+	GLbyte pad1[8]; // + 8 B = 16 B
+};
+#pragma pack( pop )
 
 #endif

@@ -104,6 +104,7 @@ int LoadMTL( const char * file_name, const char * path, std::vector<Material *> 
 	Material * material = NULL;
 
 	// --- naèítání všech materiálù ---
+	int material_index = 0;
 	while ( line != NULL )
 	{
 		if ( line[0] != '#' )
@@ -115,8 +116,10 @@ int LoadMTL( const char * file_name, const char * path, std::vector<Material *> 
 					material->set_name( material_name );
 					if ( MaterialIndex( materials, material_name ) < 0 )
 					{
+						material->material_index = material_index;
 						materials.push_back( material );
 						printf( "\r%I64u material(s)\t\t", materials.size() );
+						material_index++;
 					}
 				}
 				material = NULL;
@@ -215,9 +218,11 @@ int LoadMTL( const char * file_name, const char * path, std::vector<Material *> 
 
 	if ( material != NULL )
 	{
+		material->material_index = material_index;
 		material->set_name( material_name );
 		materials.push_back( material );
 		printf( "\r%I64u material(s)\t\t", materials.size() );
+		material_index++;
 	}
 	material = NULL;
 

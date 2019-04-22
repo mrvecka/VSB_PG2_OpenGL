@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "vertex.h"
 
-Vertex::Vertex( const Vector3 position, const Vector3 normal, Vector3 color, Coord2f * texture_coords )
+Vertex::Vertex( const Vector3 position, const Vector3 normal, Vector3 color,Coord2f * texture_coords )
 {
 	this->position = position;
 	this->normal = normal;
@@ -16,7 +16,7 @@ Vertex::Vertex( const Vector3 position, const Vector3 normal, Vector3 color, Coo
 	}	
 }
 
-MyVertex::MyVertex(Vertex v)
+MyVertex::MyVertex(Vertex v, int material_index)
 {
 	this->position = v.position;
 	this->color = v.color;
@@ -28,5 +28,7 @@ MyVertex::MyVertex(Vertex v)
 			this->texture_coords[i] = v.texture_coords[i];
 		}
 	}
+
+	this->material_index = material_index;
 
 }

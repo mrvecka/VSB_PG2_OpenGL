@@ -21,6 +21,7 @@ newmtl green_plastic_transparent
     Tf 1 1 1
     illum 2
     Ka 0.03 0.03 0.03
+	Kd 0.2 0.8 0.2
     Ke 0.3 0.1 3.0
     Ks 0.9 0.9 0.9
     ior 1.5

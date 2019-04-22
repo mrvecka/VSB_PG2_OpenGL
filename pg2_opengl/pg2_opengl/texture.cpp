@@ -162,4 +162,9 @@ void Texture::CopyTo( BYTE * data, const int pixel_size )
 	}
 }
 
+BYTE * Texture::data()
+{
+	return this->data_;
+}
+
 

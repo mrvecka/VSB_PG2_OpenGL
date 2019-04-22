@@ -23,6 +23,8 @@ public:
 	int width() const;
 	int height() const;
 
+	BYTE* data();
+
 	void CopyTo( BYTE * data, const int pixel_size = 3);
 
 private:	

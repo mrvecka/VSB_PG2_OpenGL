@@ -1,6 +1,23 @@
 #include "pch.h"
 #include "rasterizer.h"
 
+void CreateBindlessTexture(GLuint & texture, GLuint64 & handle, const int width, const int height, unsigned char * data)
+{
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture); // bind empty texture object to the target
+	// set the texture wrapping/filtering options
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// copy data from the host buffer
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	//glBindTexture(GL_TEXTURE_2D, 0); // unbind the newly created texture from the target
+	handle = glGetTextureHandleARB(texture); // produces a handle representing the texture in a shader function
+	glMakeTextureHandleResidentARB(handle);
+}
+
 Rasterizer::Rasterizer(const int width, const int height, const float fov_y, const Vector3 view_from, const Vector3 view_at,float near_plane,float far_plane)
 {
 	camera = Camera(width, height, fov_y, view_from, view_at,near_plane,far_plane);
@@ -203,7 +220,10 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 			for (int j = 0; j < 3; ++j, ++k)
 			{
 				const Vertex & vertex = triangle.vertex(j);
-				vertices.push_back(MyVertex(vertex));
+				int m_index = surface->get_material()->material_index;
+				//printf("material index= %i\n", m_index);
+
+				vertices.push_back(MyVertex(vertex, m_index));
 
 			}
 
@@ -263,6 +283,37 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 	//GLuint texCoordAttrib = glGetAttribLocation(shader_program, "in_texcoord");
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertex_stride, (void*)(sizeof(float) * 9));
 	glEnableVertexAttribArray(3);
+
+	//material index
+	glVertexAttribIPointer(5, 1, GL_INT, vertex_stride, (void*)(sizeof(float) * 11));
+	glEnableVertexAttribArray(5);
+
+
+	GLMaterial * gl_materials = new GLMaterial[materials_.size()];
+	int m = 0;
+	for (const auto & material : materials_) {
+		Texture * tex_diffuse = material->texture(Material::kDiffuseMapSlot);
+		if (tex_diffuse) {
+			GLuint id = 0;
+			CreateBindlessTexture(id, gl_materials[m].tex_diffuse_handle, tex_diffuse->width(), tex_diffuse->height(), tex_diffuse->data());
+			gl_materials[m].diffuse = Color3f{ 1.0f, 1.0f, 1.0f }; // white diffuse color
+		}
+		else {
+			GLuint id = 0;
+			GLubyte data[] = { 255, 255, 255, 255 }; // opaque white
+			CreateBindlessTexture(id, gl_materials[m].tex_diffuse_handle, 1, 1, data); // white texture
+			gl_materials[m].diffuse = material->diffuse();
+		}
+		m++;
+	}
+	GLuint ssbo_materials = 0;
+	glGenBuffers(1, &ssbo_materials);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_materials);
+	const GLsizeiptr gl_materials_size = sizeof(GLMaterial) * materials_.size();
+	glBufferData(GL_SHADER_STORAGE_BUFFER, gl_materials_size, gl_materials, GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_materials);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
 
 	//GLuint ebo = 0; // optional buffer of indices
 	//glGenBuffers( 1, &ebo );
@@ -326,4 +377,6 @@ int Rasterizer::ReleaseDeviceAndScene()
 	glfwTerminate();
 	return S_OK;
 }
+
+
 

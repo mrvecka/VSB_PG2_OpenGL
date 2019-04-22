@@ -102,15 +102,15 @@ Color3f Material::ambient( const Coord2f * tex_coord ) const
 
 Color3f Material::diffuse( const Coord2f * tex_coord ) const
 {
-	if ( tex_coord )
-	{
-		Texture * texture = textures_[kDiffuseMapSlot];
+	//if ( tex_coord )
+	//{
+	//	Texture * texture = textures_[kDiffuseMapSlot];
 
-		if ( texture )
-		{
-			return texture->texel( tex_coord->u, tex_coord->v, true );
-		}
-	}
+	//	if ( texture )
+	//	{
+	//		return texture->texel( tex_coord->u, tex_coord->v, true );
+	//	}
+	//}
 	
 	return diffuse_;
 }
