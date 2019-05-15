@@ -29,7 +29,7 @@ public:
 
 	void set_fov_y( const float fov_y );
 
-	void Update();
+	void Update(int width, int height);
 
 	float aspect_ratio;
 	float width_half;
@@ -39,11 +39,11 @@ public:
 
 	Matrix4x4 projection() const;
 	Matrix4x4 view();
-
-private:
 	int width_{ 640 }; // image width (px)
 	int height_{ 480 };  // image height (px)
 	float fov_y_{ 0.785f }; // vertical field of view (rad)
+
+private:
 	
 	Vector3 view_from_; // ray origin or eye or O
 	Vector3 view_at_; // target T

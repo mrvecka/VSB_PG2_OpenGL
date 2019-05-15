@@ -13,16 +13,13 @@ Camera::Camera( const int width, const int height, const float fov_y,
 
 	this->near_plane = near_plane;
 	this->far_plane = far_plane;
-
-	aspect_ratio = width / height;
-	height_half = near_plane * tanf(fov_y / 2);
-	width_half = height_half * aspect_ratio;
+	
 
 	// TODO compute focal lenght based on the vertical field of view and the camera resolution
 	
 	// TODO build M_c_w_ matrix
 
-	Update();
+	Update(width,height);
 }
 
 Vector3 Camera::view_from()
@@ -47,9 +44,15 @@ void Camera::set_fov_y( const float fov_y )
 	fov_y_ = fov_y;
 }
 
-void Camera::Update()
+void Camera::Update(int widthN, int heightN)
 {
-	f_y_ = height_ / ( 2.0f * tanf( fov_y_ * 0.5f ) );
+	width_ = widthN;
+	height_ = heightN;
+	f_y_ = height_ / ( 2.0f * tanf( this->fov_y_ * 0.5f ) );
+
+	aspect_ratio = width_ / height_;
+	height_half = near_plane * tanf(fov_y_ / 2);
+	width_half = height_half * aspect_ratio;
 
 	Vector3 z_c = view_from_ - view_at_;
 	z_c.Normalize();

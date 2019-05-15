@@ -12,13 +12,19 @@ uniform mat4 MV;
 out vec3 ex_color;
 out vec3 ex_normal;
 out vec2 ex_tex_coord;
+out vec3 ex_lightPos;
+out float light;
+out vec3 ex_color_amb;
+out vec3 ex_color_spec;
 
 flat out int ex_material_index;
 
 void main( void )
 {
-	//gl_Position = vec4( in_position.x, -in_position.y, in_position.z, 1.0f );
 	gl_Position = MVP * vec4(in_position.x, in_position.y, in_position.z, 1.0f);
+
+	vec3 lightPossition = vec3(100.0, 100.0, 200.0);
+	vec3 vectorToLight = normalize(lightPossition - in_position.xyz);
 
 	vec3 unified_normal_es = normalize( ( MV * vec4( in_normal.xyz, 0.0f ) ).xyz );
 	vec4 hit_es = MV * vec4(in_position.xyz,1.0f); // in_position = (nx, ny, nz, 0)
@@ -28,8 +34,14 @@ void main( void )
 		unified_normal_es *= -1.0f;
 	}
 
+	ex_material_index = in_material_index;
+
+	vectorToLight = normalize((MV * vec4(vectorToLight, 0.0f)).xyz);
+
+	light = dot(unified_normal_es, vectorToLight.xyz);
+
 	ex_color = in_color;
 	ex_normal = unified_normal_es;
-	ex_material_index = in_material_index;
 	ex_tex_coord = in_texcoord;
+
 }

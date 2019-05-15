@@ -149,9 +149,14 @@ struct GLMaterial
 {
 	Color3f diffuse; // 3 * 4B
 	GLbyte pad0[4]; // + 4 B = 16 B
+	Color3f ambient; //3 * 4B
+	GLbyte pad1[4]; // + 4 B = 16 B
+	Color3f specular; //3 * 4B
+	GLbyte pad2[4]; // + 4 B = 16 B
 	GLuint64 tex_diffuse_handle{ 0 }; // 1 * 8 B
-	GLbyte pad1[8]; // + 8 B = 16 B
+	GLbyte pad3[8]; // + 8 B = 16 B
 };
-#pragma pack( pop )
+#pragma pack( pop )
+
 
 #endif

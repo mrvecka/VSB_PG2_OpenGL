@@ -22,9 +22,7 @@ Rasterizer::Rasterizer(const int width, const int height, const float fov_y, con
 {
 	camera = Camera(width, height, fov_y, view_from, view_at,near_plane,far_plane);
 	fov = fov_y;
-	this->width = width;
-	this->height = height;
-
+	//raytracer = &Raytracer(camera, camera.fov_y_, camera.near_plane, camera.far_plane);
 }
 
 Rasterizer::~Rasterizer()
@@ -64,6 +62,20 @@ void GLAPIENTRY gl_callback(GLenum source, GLenum type, GLuint id, GLenum severi
 void framebuffer_resize_callback(GLFWwindow * window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+
+	Rasterizer *rasterizer = (Rasterizer *)glfwGetWindowUserPointer(window);
+	rasterizer->Resize(width, height);
+}
+
+void Rasterizer::Resize(int width, int height)
+{
+	camera.Update(width, height); // we need to update camera parameters as well
+	// delete custom FBO with old width and height dimensions
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDeleteRenderbuffers(1, &rbo_color);
+	glDeleteRenderbuffers(1, &rbo_depth);
+	glDeleteFramebuffers(1, &fbo);
+	InitFrameBuffers();
 }
 
 /* load shader code from text file */
@@ -157,7 +169,7 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
 
-	window = glfwCreateWindow(width, height, "PG2 OpenGL", nullptr, nullptr);
+	window = glfwCreateWindow(camera.width_, camera.height_, "PG2 OpenGL", nullptr, nullptr);
 	if (!window)
 	{
 		glfwTerminate();
@@ -167,6 +179,7 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 
 	glfwSetKeyCallback(window, key_callback);
 
+	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebuffer_resize_callback);
 	glfwMakeContextCurrent(window);
 
@@ -191,7 +204,7 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 	glEnable(GL_MULTISAMPLE);
 
 	// map from the range of NDC coordinates <-1.0, 1.0>^2 to <0, width> x <0, height>
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, camera.width_, camera.height_);
 	// GL_LOWER_LEFT (OpenGL) or GL_UPPER_LEFT (DirectX, Windows) and GL_NEGATIVE_ONE_TO_ONE or GL_ZERO_TO_ONE
 	//glClipControl( GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE );
 
@@ -202,6 +215,11 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 	{
 		this->no_triangles += surface->no_triangles();
 	}
+
+	/*raytracer->InitDeviceAndScene();
+	raytracer->LoadScene(no_surfaces, surfaces_, materials_);
+	raytracer->initGraph();*/
+
 
 	//GLfloat* vertices = new GLfloat[no_triangles *3*11];
 	std::vector<MyVertex> vertices;
@@ -220,10 +238,10 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 			for (int j = 0; j < 3; ++j, ++k)
 			{
 				const Vertex & vertex = triangle.vertex(j);
-				int m_index = surface->get_material()->material_index;
-				//printf("material index= %i\n", m_index);
+				Material *m = surface->get_material();
+				int m_index = m->material_index;
 
-				vertices.push_back(MyVertex(vertex, m_index));
+				vertices.push_back(MyVertex(vertex, m_index,m->ambient_,m->specular_));
 
 			}
 
@@ -255,7 +273,6 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 	const int size = (vertices.size() * sizeof(MyVertex)); // count of elements in vector * size of one element = size of whole array
 	const int vertex_stride = sizeof(MyVertex); // size of one MyVertex
 	// optional index array
-
 	vao = 0;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -284,8 +301,18 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertex_stride, (void*)(sizeof(float) * 9));
 	glEnableVertexAttribArray(3);
 
+	// ambient
+	//GLuint colorAttrib = glGetAttribLocation(shader_program, "in_color");
+	glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, vertex_stride, (void*)(sizeof(float) * 11));
+	glEnableVertexAttribArray(2);
+
+	// specular
+	//GLuint colorAttrib = glGetAttribLocation(shader_program, "in_color");
+	glVertexAttribPointer(7, 3, GL_FLOAT, GL_FALSE, vertex_stride, (void*)(sizeof(float) * 14));
+	glEnableVertexAttribArray(2);
+
 	//material index
-	glVertexAttribIPointer(5, 1, GL_INT, vertex_stride, (void*)(sizeof(float) * 11));
+	glVertexAttribIPointer(5, 1, GL_INT, vertex_stride, (void*)(sizeof(int) * 17));
 	glEnableVertexAttribArray(5);
 
 
@@ -303,6 +330,8 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 			GLubyte data[] = { 255, 255, 255, 255 }; // opaque white
 			CreateBindlessTexture(id, gl_materials[m].tex_diffuse_handle, 1, 1, data); // white texture
 			gl_materials[m].diffuse = material->diffuse();
+			gl_materials[m].ambient = material->ambient_;
+			gl_materials[m].specular = material->specular_;
 		}
 		m++;
 	}
@@ -326,19 +355,149 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-		
+	InitFrameBuffers();
 	//main loop
 	//release device
 
 	return EXIT_SUCCESS;
 }
 
+
+int Rasterizer::InitShaderProgram()
+{
+
+	/*glfwSetErrorCallback(glfw_callback);
+
+	if (!glfwInit())
+	{
+		return(EXIT_FAILURE);
+	}
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 8);
+	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+	glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+
+	window = glfwCreateWindow(camera.width_, camera.height_, "PG2 OpenGL", nullptr, nullptr);
+	if (!window)
+	{
+		glfwTerminate();
+		return EXIT_FAILURE;
+	}
+
+
+	glfwSetKeyCallback(window, key_callback);
+
+	glfwSetWindowUserPointer(window, this);
+	glfwSetFramebufferSizeCallback(window, framebuffer_resize_callback);
+	glfwMakeContextCurrent(window);
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		if (!gladLoadGL())
+		{
+			return EXIT_FAILURE;
+		}
+	}*/
+
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(gl_callback, nullptr);
+
+	/*printf("OpenGL %s, ", glGetString(GL_VERSION));
+	printf("%s", glGetString(GL_RENDERER));
+	printf(" (%s)\n", glGetString(GL_VENDOR));
+	printf("GLSL %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+	check_gl();*/
+
+	glEnable(GL_MULTISAMPLE);
+
+	// map from the range of NDC coordinates <-1.0, 1.0>^2 to <0, width> x <0, height>
+	glViewport(0, 0, camera.width_, camera.height_);
+
+	GLfloat vertices[] =
+	{
+		1.0f, 1.0f, // vertex 1 : p1.x, p1.y top-right
+		-1.0f, 1.0f,  // vertex 0 : p0.x, p0.y top-left
+		-1.0f, -1.0f,// vertex 2 : p2.x, p2.y bottom-left
+		1.0f, -1.0f //vertex 2 : p3.x, p3.y bottom-right
+	};
+	const int no_vertices = 4;
+	const int vertex_stride = sizeof(vertices) / no_vertices;
+
+	shadow_vao = 0;
+	glGenVertexArrays(1, &shadow_vao);
+	glBindVertexArray(shadow_vao);
+	shadow_vbo = 0;
+	glGenBuffers(1, &shadow_vbo); // generate vertex buffer object (one of OpenGL objects) and get the unique ID corresponding to that buffer
+	glBindBuffer(GL_ARRAY_BUFFER, shadow_vbo); // bind the newly created buffer to the GL_ARRAY_BUFFER target
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // copies the previously defined vertex data into the buffer's memory
+	// vertex position
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertex_stride, 0);
+	glEnableVertexAttribArray(0);
+
+
+
+	shadow_vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	const char * shadow_vertex_shader_source = LoadShader("shadow_shader.vert");
+	glShaderSource(shadow_vertex_shader, 1, &shadow_vertex_shader_source, nullptr);
+	glCompileShader(shadow_vertex_shader);
+	SAFE_DELETE_ARRAY(shadow_vertex_shader_source);
+	CheckShader(shadow_vertex_shader);
+
+	shadow_fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	const char * shadow_fragment_shader_source = LoadShader("shadow_shader.frag");
+	glShaderSource(shadow_fragment_shader, 1, &shadow_fragment_shader_source, nullptr);
+	glCompileShader(shadow_fragment_shader);
+	SAFE_DELETE_ARRAY(shadow_fragment_shader_source);
+	CheckShader(shadow_fragment_shader);
+
+	shadow_program = glCreateProgram();
+	glAttachShader(shadow_program, shadow_vertex_shader);
+	glAttachShader(shadow_program, shadow_fragment_shader);
+	glLinkProgram(shadow_program);
+
+
+	glPointSize(2.0f);
+	glLineWidth(1.0f);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	return 0;
+}
+
+void Rasterizer::InitFrameBuffers()
+{
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	// Color renderbuffer.
+	glGenRenderbuffers(1, &rbo_color);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo_color);
+	glRenderbufferStorage(GL_RENDERBUFFER, /*GL_RGBA8*/GL_RGBA32F, camera.width_, camera.height_);
+	// Depth renderbuffer
+	glGenRenderbuffers(1, &rbo_depth);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo_depth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, camera.width_, camera.height_);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo_color);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_depth);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) return;
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+}
+
 int Rasterizer::MainLoop()
 {
 	glUseProgram(shader_program);
+
 	float a = deg2rad(45);
 	while (!glfwWindowShouldClose(window))
 	{
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // state setting function
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // state using function
 
@@ -354,16 +513,50 @@ int Rasterizer::MainLoop()
 		Matrix4x4 mv = camera.view()*model;
 		SetMatrix4x4(shader_program, mvp.data(), "MV");
 
+
 		glDrawArrays(GL_TRIANGLES, 0, no_triangles*3);
+		
 		//glDrawArrays( GL_POINTS, 0, 3 );
 		//glDrawArrays( GL_LINE_LOOP, 0, 3 );
 		//glDrawElements( GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 ); // optional - render from an index buffer
 
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo); // bind custom FBO for reading
+		glReadBuffer(GL_COLOR_ATTACHMENT0); // select it‘s first color buffer for reading
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // bind default FBO (0) for writing
+		glDrawBuffer(GL_BACK_LEFT); // select it‘s left back buffer for writing
+		glBlitFramebuffer(0, 0, camera.width_, camera.height_, 0, 0, camera.width_, camera.height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);// copy
+
+		//new program
+		//InitShaderProgram();
+
 		glfwSwapBuffers(window);
+		glfwSwapInterval(1);
 		glfwPollEvents();
+
 	}
 	return S_OK;
 }
+
+//int Rasterizer::MainLoopShadow()
+//{
+//	glUseProgram(shadow_program);
+//	float a = deg2rad(45);
+//	while (!glfwWindowShouldClose(window))
+//	{
+//		glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // state setting function
+//		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // state using function
+//
+//		glBindVertexArray(shadow_vao);
+//
+//
+//		glDrawArrays(GL_LINE_LOOP, 0, 4);
+//
+//		glfwSwapBuffers(window);
+//		glfwPollEvents();
+//	}
+//	
+//	return S_OK;
+//}
 
 int Rasterizer::ReleaseDeviceAndScene()
 {
@@ -377,6 +570,20 @@ int Rasterizer::ReleaseDeviceAndScene()
 	glfwTerminate();
 	return S_OK;
 }
+
+//int Rasterizer::ReleaseDeviceAndSceneShadow()
+//{
+//
+//	glDeleteShader(shadow_vertex_shader);
+//	glDeleteShader(shadow_fragment_shader);
+//	glDeleteProgram(shadow_program);
+//
+//	glDeleteBuffers(1, &shadow_vbo);
+//	glDeleteVertexArrays(1, &shadow_vao);
+//
+//	glfwTerminate();
+//	return S_OK;
+//}
 
 
 

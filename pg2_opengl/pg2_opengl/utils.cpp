@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "utils.h"
 
 using std::mt19937;
 using std::uniform_real_distribution;
@@ -8,6 +9,14 @@ typedef uniform_real_distribution<float>            Distribution;
 
 auto uniform_generator = std::bind( Distribution( 0.0f, 1.0f ), Engine( 1 ) );
 
+RTresult createAndSetMaterialColorVariable(RTmaterial rtMaterial, const char* label, Color3f color) {
+	RTresult result;
+	RTvariable materialColor;
+	result = rtMaterialDeclareVariable(rtMaterial, label, &materialColor);
+	result = rtVariableSet3f(materialColor, color.r, color.g, color.b);
+
+	return result;
+}
 
 float Random( const float range_min, const float range_max )
 {

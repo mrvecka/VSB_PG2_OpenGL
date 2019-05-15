@@ -4,7 +4,7 @@
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerEnvironment>PATH=%PATH%;../../libs/freeimage/bin</LocalDebuggerEnvironment>
+    <LocalDebuggerEnvironment>PATH=%PATH%;../../libs/freeimage/bin;c:/ProgramData/NVIDIA Corporation/OptiX SDK 6.0.0/bin64</LocalDebuggerEnvironment>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerEnvironment>PATH=%PATH%;../../libs/freeimage/bin</LocalDebuggerEnvironment>

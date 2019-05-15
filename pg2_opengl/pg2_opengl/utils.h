@@ -1,3 +1,4 @@
+#include "structs.h"
 #ifndef UTILS_H_
 #define UTILS_H_
 
@@ -95,5 +96,10 @@ char * RTrim( char * s );
 \return Ukazatel na novou pozici v tomtéž øetìzci
 */
 char * Trim( char *s );
+
+
+RTresult createAndSetMaterialColorVariable(RTmaterial rtMaterial, const char* label, Color3f color);
+RTresult createAndSetMaterialScalarVariable(RTmaterial rtMaterial, const char* label, float scalar);
+
 
 #endif

@@ -16,6 +16,9 @@
 #include <assert.h>
 #include <functional>
 
+#include <optix.h>
+#include <optix_world.h>
+
 // Glad - multi-Language GL/GLES/EGL/GLX/WGL loader-generator based on the official specs
 #include <glad/glad.h>
 

@@ -8,6 +8,7 @@
 #include "matrix4x4.h"
 #include "glutils.h"
 #include "mymath.h"
+#include "raytracer.h"
 
 /*! \class Raytracer
 \brief General ray tracer class.
@@ -23,10 +24,14 @@ public:
 	~Rasterizer();
 
 	int InitDeviceAndScene(const char* filename);
+	int InitShaderProgram();
+	void InitFrameBuffers();
 	int initGraph();
 	int MainLoop();
+	int MainLoopShadow();
 	int ReleaseDeviceAndScene();
-
+	int ReleaseDeviceAndSceneShadow();
+	void Resize(int width, int height);
 
 	bool check_gl(const GLenum error = glGetError());
 
@@ -38,18 +43,27 @@ public:
 	void LoadScene(const std::string file_name);
 	int Ui();
 
-	int width;
-	int height;
-
 	GLuint vao = 0;
 	GLuint vbo = 0;
+	GLuint shadow_vao = 0;
+	GLuint shadow_vbo = 0;
+	GLuint fbo = 0;
+	GLuint rbo_color = 0;
+	GLuint rbo_depth = 0;
 	int no_triangles = 0;
 
 	GLuint vertex_shader;
 	GLuint fragment_shader;
 	GLuint shader_program;
 
+	GLuint shadow_vertex_shader;
+	GLuint shadow_fragment_shader;
+	GLuint shadow_program;
+
 	GLFWwindow * window;
+
+
+	Raytracer * raytracer;
 
 private:
 	std::vector<Surface *> surfaces_;

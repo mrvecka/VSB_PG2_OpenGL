@@ -16,7 +16,7 @@ Vertex::Vertex( const Vector3 position, const Vector3 normal, Vector3 color,Coor
 	}	
 }
 
-MyVertex::MyVertex(Vertex v, int material_index)
+MyVertex::MyVertex(Vertex v, int material_index,Color3f amb,Color3f spec)
 {
 	this->position = v.position;
 	this->color = v.color;
@@ -30,5 +30,7 @@ MyVertex::MyVertex(Vertex v, int material_index)
 	}
 
 	this->material_index = material_index;
+	this->ambient = Vector3(amb.r,amb.g,amb.b);
+	this->specular = Vector3(spec.r, spec.g, spec.b);
 
 }

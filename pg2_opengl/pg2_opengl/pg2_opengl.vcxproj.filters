@@ -34,6 +34,12 @@
     <Filter Include="Source Files\glad">
       <UniqueIdentifier>{c161e05c-8c04-4e6c-84b6-dd508dfd6bb8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\optix">
+      <UniqueIdentifier>{cac9cbd4-ffc3-4f01-94fb-9b02dafec8fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\optix">
+      <UniqueIdentifier>{c41968ed-7447-4296-b89e-de33389f946a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -89,6 +95,12 @@
     </ClInclude>
     <ClInclude Include="matrix4x4.h">
       <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="raytracer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="optixtutorial.h">
+      <Filter>Header Files\optix</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +161,9 @@
     <ClCompile Include="matrix4x4.cpp">
       <Filter>Source Files\math</Filter>
     </ClCompile>
+    <ClCompile Include="raytracer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="basic_shader.vert">
@@ -157,5 +172,16 @@
     <None Include="basic_shader.frag">
       <Filter>Source Files\opengl</Filter>
     </None>
+    <None Include="shadow_shader.frag">
+      <Filter>Source Files\opengl</Filter>
+    </None>
+    <None Include="shadow_shader.vert">
+      <Filter>Source Files\opengl</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="optixtutorial.cu">
+      <Filter>Source Files\optix</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

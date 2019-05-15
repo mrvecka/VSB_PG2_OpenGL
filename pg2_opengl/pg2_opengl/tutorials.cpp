@@ -10,6 +10,12 @@ int tutorial_1( const int width, const int height )
 	rasterizer.MainLoop();
 	rasterizer.ReleaseDeviceAndScene();
 
+
+	//----- run shadow program for check ----
+	/*rasterizer.InitShaderProgram();
+	rasterizer.MainLoopShadow();
+	rasterizer.ReleaseDeviceAndSceneShadow();*/
+
 	return S_OK;
 
 }

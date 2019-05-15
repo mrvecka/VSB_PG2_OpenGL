@@ -24,6 +24,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>pg2opengl</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <CudaToolkitCustomDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0</CudaToolkitCustomDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -54,6 +55,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -75,8 +77,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>../../libs/glad/include;../../libs/glfw/include;../../libs/freeimage/include;$(IncludePath)</IncludePath>
-    <LibraryPath>../../libs/glfw/lib;../../libs/freeimage/lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>../../libs/glad/include;../../libs/glfw/include;../../libs/freeimage/include;C:\ProgramData\NVIDIA Corporation\OptiX SDK 6.0.0\include;c:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>../../libs/glfw/lib;../../libs/freeimage/lib;c:\ProgramData\NVIDIA Corporation\OptiX SDK 6.0.0\lib64\;c:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -114,8 +116,15 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3d.lib;freeimaged.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>D3d11.lib;d3dcompiler.lib;glfw3d.lib;FreeImaged.lib;optix.6.0.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <NvccCompilation>ptx</NvccCompilation>
+    </CudaCompile>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CompileOut>$(IntDir)%(optixtutorial)%(Extension).ptx</CompileOut>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -165,8 +174,10 @@
     <ClInclude Include="matrix4x4.h" />
     <ClInclude Include="mymath.h" />
     <ClInclude Include="objloader.h" />
+    <ClInclude Include="optixtutorial.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="rasterizer.h" />
+    <ClInclude Include="raytracer.h" />
     <ClInclude Include="structs.h" />
     <ClInclude Include="surface.h" />
     <ClInclude Include="texture.h" />
@@ -193,6 +204,7 @@
     </ClCompile>
     <ClCompile Include="pg2_opengl.cpp" />
     <ClCompile Include="rasterizer.cpp" />
+    <ClCompile Include="raytracer.cpp" />
     <ClCompile Include="structs.cpp" />
     <ClCompile Include="surface.cpp" />
     <ClCompile Include="texture.cpp" />
@@ -205,8 +217,19 @@
   <ItemGroup>
     <None Include="basic_shader.frag" />
     <None Include="basic_shader.vert" />
+    <CudaCompile Include="optixtutorial.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(filename).ptx</CompileOut>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_50,sm_50</CodeGeneration>
+      <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
+    </CudaCompile>
+    <None Include="shadow_shader.frag" />
+    <None Include="shadow_shader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />
   </ImportGroup>
 </Project>
