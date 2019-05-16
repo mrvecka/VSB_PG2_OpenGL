@@ -1,4 +1,4 @@
 ﻿  rasterizer.cpp
-d:\skola\8.semester\pg2\pg2_template_opengl_vs2017\pg2_opengl\pg2_opengl\rasterizer.cpp(273): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\skola\8.semester\pg2\pg2_template_opengl_vs2017\pg2_opengl\pg2_opengl\rasterizer.cpp(273): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+d:\skola\8.semester\pg2\pg2_template_opengl_vs2017\pg2_opengl\pg2_opengl\rasterizer.cpp(274): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\skola\8.semester\pg2\pg2_template_opengl_vs2017\pg2_opengl\pg2_opengl\rasterizer.cpp(274): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
   pg2_opengl.vcxproj -> D:\Skola\8.semester\PG2\pg2_template_opengl_vs2017\pg2_opengl\x64\Debug\pg2_opengl.exe

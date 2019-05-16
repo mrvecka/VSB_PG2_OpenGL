@@ -166,8 +166,9 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 8);
-	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-	glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+	glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+	glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
 	window = glfwCreateWindow(camera.width_, camera.height_, "PG2 OpenGL", nullptr, nullptr);
 	if (!window)
@@ -202,7 +203,7 @@ int Rasterizer::InitDeviceAndScene(const char* filename)
 	check_gl();
 
 	glEnable(GL_MULTISAMPLE);
-
+	glEnable(GL_FRAMEBUFFER_SRGB);
 	// map from the range of NDC coordinates <-1.0, 1.0>^2 to <0, width> x <0, height>
 	glViewport(0, 0, camera.width_, camera.height_);
 	// GL_LOWER_LEFT (OpenGL) or GL_UPPER_LEFT (DirectX, Windows) and GL_NEGATIVE_ONE_TO_ONE or GL_ZERO_TO_ONE
@@ -477,7 +478,7 @@ void Rasterizer::InitFrameBuffers()
 	// Color renderbuffer.
 	glGenRenderbuffers(1, &rbo_color);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo_color);
-	glRenderbufferStorage(GL_RENDERBUFFER, /*GL_RGBA8*/GL_RGBA32F, camera.width_, camera.height_);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_SRGB8_ALPHA8, camera.width_, camera.height_);
 	// Depth renderbuffer
 	glGenRenderbuffers(1, &rbo_depth);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo_depth);
@@ -511,7 +512,7 @@ int Rasterizer::MainLoop()
 		Matrix4x4 mvp = camera.projection()*camera.view()*model;
 		SetMatrix4x4(shader_program, mvp.data(), "MVP");
 		Matrix4x4 mv = camera.view()*model;
-		SetMatrix4x4(shader_program, mvp.data(), "MV");
+		SetMatrix4x4(shader_program, mv.data(), "MV");
 
 
 		glDrawArrays(GL_TRIANGLES, 0, no_triangles*3);

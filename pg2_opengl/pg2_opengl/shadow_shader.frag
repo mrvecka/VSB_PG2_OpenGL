@@ -12,4 +12,5 @@ void main( void ) {
 	vec4 color = texture( color_map, tc ).xyzw;
 	vec4 shadow = texture( shadow_map, tc ).xyzw;
 	FragColor = color;
-}
+}
+

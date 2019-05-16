@@ -23,7 +23,7 @@ void main( void )
 {
 	gl_Position = MVP * vec4(in_position.x, in_position.y, in_position.z, 1.0f);
 
-	vec3 lightPossition = vec3(100.0, 100.0, 200.0);
+	vec3 lightPossition = vec3(100.0, 50.0, 200.0);
 	vec3 vectorToLight = normalize(lightPossition - in_position.xyz);
 
 	vec3 unified_normal_es = normalize( ( MV * vec4( in_normal.xyz, 0.0f ) ).xyz );

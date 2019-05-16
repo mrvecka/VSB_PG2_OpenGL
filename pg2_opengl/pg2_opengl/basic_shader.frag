@@ -31,6 +31,5 @@ void main( void )
 
 	vec4 amb = vec4(materials[ex_material_index].ambient.rgb, 1.0f);
 
-	
 	FragColor =  diff;
 }
